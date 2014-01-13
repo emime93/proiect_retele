@@ -12,6 +12,7 @@ char msg[1024];
 char menuString[] = "---------- MENU ----------\nSign up (s) \nLogin (l) \nExit (q)\n--------------------------";
 char menuUser[] = "---------- MENU ----------\nVoteaza (v) \nAfisare top general (a)\nAfisare top dupa gen (g)\nComenteaza melodie (c)\nCauta melodie(s)\nLogout (l)\n--------------------------";
 char menuAdmin[] ="---------- MENU ----------\nVoteaza (v) \nAfisare top general (a)\nAfisare top dupa gen (g)\nComenteaza melodie (c)\nCauta melodie(s)\nAdauga melodie(m)\nSterge melodie(d)\nRestrictioneaza \\ derestrictioneaza vot(r)\nLogout (l)\n--------------------------";
+
 typedef struct thread_data{
         int fd;
         int *clientID;
@@ -22,26 +23,30 @@ typedef struct thread_data{
         int terminated;
         int admin;
 };
+
 char* getFileContent(char* fileName){
 
   FILE * pFile;
+		long lSize;
+ 		char * buffer;
+  		size_t result;
 
-  long lSize;
-  char * buffer;
-  size_t result;
+  		pFile = fopen ( fileName , "rb" );
+  		if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
-  pFile = fopen ( fileName , "rb" );
-  if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+  		fseek (pFile , 0 , SEEK_END);
+  		lSize = ftell (pFile);
+  		rewind (pFile);
 
-  fseek (pFile , 0 , SEEK_END);
-  lSize = ftell (pFile);
-  rewind (pFile);
+  		buffer = (char*) malloc (sizeof(char)*lSize);
+  		if (buffer == NULL) {
+  			fputs ("Memory error",stderr); exit (2);
+  		}
 
-  buffer = (char*) malloc (sizeof(char)*lSize);
-  if (buffer == NULL) {fputs ("Memory error",stderr); exit (2);}
-
-  result = fread (buffer,1,lSize,pFile);
-  if (result != lSize) {fputs ("Reading error",stderr); exit (3);}
+  		result = fread (buffer,1,lSize,pFile);
+  		if (result != lSize) {
+  			fputs ("Reading error",stderr); exit (3);
+  		}
 
   fclose (pFile);
 return buffer;
@@ -58,11 +63,13 @@ int isAdmin(char* nickname){
         size_t len;
         char* line = NULL;
 
+        int ok,k;
+
                 while(getline(&line,&len,fin) != -1){
                                 char* p;
                                 p = strtok(line,"|");
-                                int k = 0;
-                                int ok = 0;
+                                k = 0;
+                                ok = 0;
                                 while(p){
                                         if(k == 0 && strcmp(nickname,p) == 0) ok = 1;
                                         ++k;
@@ -76,41 +83,34 @@ char* readFromClient(struct thread_data* data, char* msg1){
         char msg[1024];
 
         bzero(msg,1024);
-        if (data->fd < 0)
-                {
+        if (data->fd < 0){
                         perror("err from client\n");
-                }
-                int bytes = read(data->fd,msg,sizeof(msg));
+        }
+        
+        int bytes = read(data->fd,msg,sizeof(msg));
 
-                if (bytes <= 0)
-                {
-                        close(data->fd);
-                        *(data->clientID+data->pos) = -1;
-                        bzero(msg,1024);
-                        strcpy(msg,data->nickname);
-                        strcat(msg," has left the chat\n");        
-                        char who[] = "server";
-                        printf("%s",msg);
-                        data->terminated = -1;
-                        return "bout";
-                }
-                else if(strcmp(msg,"") == 0){
+            if (bytes <= 0){
+                close(data->fd);
+                *(data->clientID+data->pos) = -1;
+                bzero(msg,1024);
+                strcpy(msg,data->nickname);
+                strcat(msg," has left the chat\n");        
+                data->terminated = -1;
+                return "bout";
+           } else 
+               if(strcmp(msg,"") == 0){
                         close(data->fd);
                                 *(data->clientID+data->pos) = -1;
                                 //the client has been disconected
-                } 
-                        else {
-
-                        printf("Message from client: %s",msg);
-                        printf("Client id: %d\n",data->fd);
-                        return msg;
-
-                }
-return "bout";
+                } else return msg; 
+return "nothing";
 }
 char *replacestr(char *string, char *sub, char *replace){
+             
               if(!string || !sub || !replace) return NULL;
-              char *pos = string; int found = 0;
+              
+              char *pos = string; 
+              int found = 0;
               while((pos = strstr(pos, sub))){
                         pos += strlen(sub);
                         found++;
@@ -119,7 +119,7 @@ char *replacestr(char *string, char *sub, char *replace){
               int size = ((strlen(string) - (strlen(sub) * found)) + (strlen(replace) * found)) + 1;
               char *result = (char*)malloc(size);
               pos = string; 
-         char *pos1;
+              char *pos1;
               while((pos1 = strstr(pos, sub))){
                         int len = (pos1 - pos);
                         strncat(result, pos, len);
@@ -128,7 +128,7 @@ char *replacestr(char *string, char *sub, char *replace){
               }
               if(pos != (string + strlen(string)))
                         strncat(result, pos, (string - pos));
-              return result;
+return result;
 }
 
 int stergeMelodie(char* melodie){
@@ -147,20 +147,18 @@ int stergeMelodie(char* melodie){
                 memmove(a,b+1,strlen(b)+1);
 
                 FILE* fout;
-                fout = fopen("melodie.txt","w");
-                fprintf(fout,buffer);
+                	fout = fopen("melodie.txt","w");
+                	fprintf(fout,buffer);
                 fclose(fout);
                 free(buffer);
-
 return 1;
 }
 int restrictUser(char* userToRestrict){
 
         int restricted;
-
         char* buffer = getFileContent("useri.txt");
         char user[250];
-        strcpy(user,"");
+        strcpy(user,""); 
 
         strcat(user,userToRestrict);
         strcat(user,"|");
@@ -170,25 +168,19 @@ int restrictUser(char* userToRestrict){
         int i = begin;
 
         if(strstr(buffer,user) == NULL) return 1;
-
                 if(buffer[i-2] == '\n' || i == 0){
                         if(isAdmin(userToRestrict)) return 0;
-
-                                while(buffer[i+1] != '\n')++i;
-
+                                while(buffer[i+1] != '\n') ++i;
                                 if (buffer[i] == '0') { buffer[i] = '1'; restricted = 2;}
                                 else { buffer[i] = '0'; restricted = 1; }
         
                                 FILE* fout;
-
-                                fout = fopen("useri.txt","w");
-
-                                fprintf(fout,buffer);
+                                	fout = fopen("useri.txt","w");
+                                	fprintf(fout,buffer);
                                 fclose(fout);
                                 free(buffer);
-                } else return 0;
-
-return restricted;
+                } else return 0; //userul nu exista sau fisierul este gol
+return restricted; //returneaza 2 daca a fost ridicata restrictia si 1 daca a fost restrictionat
 }
 char* getComm(char* song1){
 
@@ -200,13 +192,9 @@ char* getComm(char* song1){
         char user[250],song[250],comment[5000];
         char output1[5500];
         strcpy(output1,"");
-
-
                 while(getline(&line,&len,fin) != -1){
-                        
                         char* p;
                         p = strtok(line,"|");
-
                         int pos = 0;
                         while(p){
                                 switch(pos){
@@ -224,12 +212,15 @@ char* getComm(char* song1){
                                 p = strtok(NULL,"|");
                         }
                         if(strcmp(song,song1) == 0){
+
                                 strcat(output1,"User: ");
                                 strcat(output1,user);
                                 strcat(output1,"\n");
+                                
                                 strcat(output1,"Melodie: ");
                                 strcat(output1,song);
                                 strcat(output1,"\n");
+
                                 strcat(output1,"Comentariu: ");
                                 strcat(output1,comment);
                                 strcat(output1,"\n");
@@ -237,12 +228,11 @@ char* getComm(char* song1){
                         }
                 }
                 if(strcmp(output1,"") == 0) return "";
-return replacestr(output1,"\\n","\n            ");
+return replacestr(output1,"\\n","\n            "); //formatam output-ul ca sa deosebim comentariile mai bine
 }
-
 char* searchSong(char* song){
+       
         FILE* fout;
-
         fout = fopen("melodie.txt","r");
 
         size_t len;
@@ -264,26 +254,24 @@ char* searchSong(char* song){
                                 p = strtok(line,"|");
                                 j = 0;
                                 l = 0;
-
                                 while (p){
-                        
                                         if (j > 2 && j < 2+numberOfGendres){ 
-                                        strcat(output1,songAttributes[l]);
-                                        strcat(output1,": ");
-                                         strcat(output1,p);
-                                  strcat(output1,"\n");
+                                        	strcat(output1,songAttributes[l]);
+                                        	strcat(output1,": ");
+                                        	strcat(output1,p);
+                                  			strcat(output1,"\n");
                                       } else {
                                                 if (j != 2){
-                                                strcat(output1,songAttributes[l]);
-                                                strcat(output1,": ");
-                                               strcat(output1,p);
-                                                strcat(output1,"\n");
-                                                ++l;
+                                                	strcat(output1,songAttributes[l]);
+                                                	strcat(output1,": ");
+                                                	strcat(output1,p);
+                                                	strcat(output1,"\n");
+                                                	++l;
                                               } else numberOfGendres = parseInt(p);
                                         }
-                                p = strtok(NULL,"|");
                                 j++;
-                                 }
+                                p = strtok(NULL,"|");
+                                }
                         }
                 }
         fclose(fout);
@@ -291,22 +279,20 @@ return output1;
 }
 int checkIfSongExists(char* song){
         FILE* fout;
-
-        fout = fopen("melodie.txt","r");
-
         size_t len;
         char* line = NULL;
-
         int ok = 0;
-
         char* pch;
-                while (getline(&line,&len,fout) != -1) {
+
+        	fout = fopen("melodie.txt","r");
+				while (getline(&line,&len,fout) != -1) {
                         pch = strchr(line,'|');
                         int pos = pch-line+1;
                         pos--;
                         if (strncmp(line,song,pos) == 0) ok = 1;
                 }
-        fclose(fout);
+        	fclose(fout);
+
 return ok;
 }
 int addSong(struct thread_data* data){
@@ -324,7 +310,7 @@ int addSong(struct thread_data* data){
                 for(i = 1; i <= 5; ++i){
                         switch(i){
                                 case 1:
-                                notifyUser(data,"Nume:");
+                                		notifyUser(data,"Nume:");
                                         strcpy(input,readFromClient(data,input));
                                         input[strlen(input)-1] = '\0';
                                                 strcat(buffer,input);
@@ -340,16 +326,17 @@ int addSong(struct thread_data* data){
                                         notifyUser(data,"Numar genuri:");
                                         strcpy(input,readFromClient(data,input));
                                         input[strlen(input)-1] = '\0';
-                                        strcat(buffer,"|");
-                                        strcat(buffer,input);
-                                        nrGen = atoi(input);
+                                        		strcat(buffer,"|");
+                                        		strcat(buffer,input);
+                                        		nrGen = atoi(input);
 
-                                        for (j = 1; j <= nrGen; ++j){
-                                                notifyUser(data,"Gen:");
-                                                strcpy(input,readFromClient(data,input));
-                                                input[strlen(input)-1] = '\0';
-                                                strcat(buffer,"|");
-                                                strcat(buffer,input);
+                                        		for (j = 1; j <= nrGen; ++j){
+                                                
+                                                		notifyUser(data,"Gen:");
+                                                		strcpy(input,readFromClient(data,input));
+                                                		input[strlen(input)-1] = '\0';
+                                                		strcat(buffer,"|");
+                                                		strcat(buffer,input);
                                         }
                                 break;
                                 case 4:
@@ -373,11 +360,10 @@ int add_comm(char* user, char* nume, char* comm){
         if (!checkIfSongExists(nume)){
                 return 0;
         }
+        
         FILE* fout;
-
         fout = fopen("comentarii.txt","a");
-
-        char buffer[1024];
+		char buffer[1024];
 
         strcpy(buffer, user);
         strcat(buffer, "|");
@@ -404,14 +390,13 @@ void markVote(char* nickname,char* song){
     strcat(output1,"|");
     strcat(output1,song);
   
-   if(fprintf(fout,"%s",output1) == -1) perror("err while writing to voturi.txt\n");
+   	if(fprintf(fout,"%s",output1) == -1) perror("err while writing to voturi.txt\n");
 
   fclose(fout);
-
 }
 int canIVote(char* nickname, char* melodie){
+  
   FILE* fin;
-
   fin = fopen("voturi.txt","r");
 
   size_t len;
@@ -432,72 +417,64 @@ return 1;
 }
 char* showTopByGendre(char* buffer1,char *gen){
 
-
-       
        int vizitat[500];
        char output1[25000];
        strcpy(output1,"");
-
        char* songAttributes[] = {"Nume","Descriere","Gen","Link","Vot"};
-            
-
-       int i = 0;
-       int j;
-       int l;
-
-       for(i = 1; i < 500; ++i) vizitat[i] = 0;
+       int i = 0,j,l;
        int max = -999;
-
-       char *buffer = strdup(buffer1);
-       char* p = strtok(buffer,"\n");
        int linesCount = 0;
 
-       while(p){
-        linesCount++;
-        p = strtok(NULL,"\n");
-       }
+       		for(i = 1; i < 500; ++i) vizitat[i] = 0;
+       
+       		char *buffer = strdup(buffer1);
+       		char* p = strtok(buffer,"\n");
+       
+       		while(p){
+        		linesCount++;
+        		p = strtok(NULL,"\n");
+       		}
 
-       i = 0;
-       while(i < linesCount){
-       char *buffer = strdup(buffer1);
-       char* p = strtok(buffer,"\n");
-       int lineNo = 0;
-       int lineNoMax;
-       max = -999;
+       		i = 0;
+       		while(i < linesCount){
+       			char *buffer = strdup(buffer1);
+       			char* p = strtok(buffer,"\n");
+       			int lineNo = 0;
+       			int lineNoMax;
+       			max = -999;
 
-       while(p){
-        lineNo++;
-        char* pch = strrchr(p,'|');
-        char* pch1 = strchr(p,'\n');
+       			while(p){
+        			lineNo++;
+        			char* pch = strrchr(p,'|');
+        			char* pch1 = strchr(p,'\n');
 
-        int start = (int) (pch - p);
-        start++;
-        int end = (int) (pch1 - p);
+        			int start = (int) (pch - p);
+        			start++;
+        			int end = (int) (pch1 - p);
 
-        char number[5];
-        sprintf(number,"%.*s\n", end - start, &p[start]);
-        int n = parseInt(number);
+        			char number[5];
+        			sprintf(number,"%.*s\n", end - start, &p[start]);
+        			int n = parseInt(number);
 
-
-        if(n > max && vizitat[lineNo] == 0){ max = n; lineNoMax = lineNo;}
-        
-        p = strtok(NULL,"\n");
+					if(n > max && vizitat[lineNo] == 0){ 
+							max = n; 
+							lineNoMax = lineNo;
+					}
+        		p = strtok(NULL,"\n");
        }
 
        buffer = strdup(buffer1);
        p = strtok(buffer,"\n");
        int secondCount = 0;
-       while(p){
-        secondCount ++;
-        if(secondCount == lineNoMax){
-            char *buf = strdup(p);
-            char* p1 = strtok(buf,"|");
 
+       while(p){
+        	secondCount ++;
+        	if(secondCount == lineNoMax){
+            	char *buf = strdup(p);
+            	char* p1 = strtok(buf,"|");
                 j = 0;
                 int numberOfGendres;
                 l = 0;
-
-
 
                 char* pch = strstr(p,gen);
        
@@ -567,77 +544,76 @@ char* showTopFromVote(char *buffer1){
 
        i = 0;
        while(i < linesCount){
-        char *buffer = strdup(buffer1);
-       char* p = strtok(buffer,"\n");
-       int lineNo = 0;
-       int lineNoMax;
-       max = -999;
+       		char *buffer = strdup(buffer1);
+       		char* p = strtok(buffer,"\n");
+       		int lineNo = 0;
+       		int lineNoMax;
+       		max = -999;
 
-       while(p){
-        lineNo++;
-        char* pch = strrchr(p,'|');
-        char* pch1 = strchr(p,'\n');
+       			while(p){
+        			lineNo++;
+        			char* pch = strrchr(p,'|');
+        			char* pch1 = strchr(p,'\n');
 
-        int start = (int) (pch - p);
-        start++;
-        int end = (int) (pch1 - p);
+        			int start = (int) (pch - p);
+        			start++;
+        			int end = (int) (pch1 - p);
 
-        char number[5];
-        sprintf(number,"%.*s\n", end - start, &p[start]);
-        int n = parseInt(number);
+        			char number[5];
+        			sprintf(number,"%.*s\n", end - start, &p[start]);
+        			int n = parseInt(number);
 
+        	 		if(n > max && vizitat[lineNo] == 0){ max = n; lineNoMax = lineNo;}
+        		p = strtok(NULL,"\n");
+       			}	
 
-        if(n > max && vizitat[lineNo] == 0){ max = n; lineNoMax = lineNo;}
-        
-        p = strtok(NULL,"\n");
-       }
+       		buffer = strdup(buffer1);
+       		p = strtok(buffer,"\n");
+       		int secondCount = 0;
+       
+       		while(p){
+        		secondCount ++;
+        			if(secondCount == lineNoMax){
+            			char *buf = strdup(p);
+            			char* p1 = strtok(buf,"|");
 
-       buffer = strdup(buffer1);
-       p = strtok(buffer,"\n");
-       int secondCount = 0;
-       while(p){
-        secondCount ++;
-        if(secondCount == lineNoMax){
-            char *buf = strdup(p);
-            char* p1 = strtok(buf,"|");
-
-                j = 0;
-                int numberOfGendres;
-                l = 0;
-                while (p1){
+                		j = 0;
+                		int numberOfGendres;
+                		l = 0;
+                		
+                		while (p1){
                         
-                        if (j > 2 && j < 2+numberOfGendres) {
-                                strcat(output1,songAttributes[l]);
-                                strcat(output1,": ");
-                                strcat(output1,p1);
-                                strcat(output1,"\n");
-                        }
-                        else {
-                        if (j != 2){
-                                strcat(output1,songAttributes[l]);
-                                strcat(output1,": ");
-                                strcat(output1,p1);
-                                strcat(output1,"\n");
-                                ++l;
-                        }
-                        else numberOfGendres = parseInt(p1);
-                        }
+                        	if (j > 2 && j < 2+numberOfGendres) {
+                                	strcat(output1,songAttributes[l]);
+                                	strcat(output1,": ");
+                                	strcat(output1,p1);
+                                	strcat(output1,"\n");
+                       		 }
+                       		 else {
+                        			if (j != 2){
+                                		strcat(output1,songAttributes[l]);
+                                		strcat(output1,": ");
+                                		strcat(output1,p1);
+                                		strcat(output1,"\n");
+                                		++l;
+                        			}
+                        			else numberOfGendres = parseInt(p1);
+                        	}
+							p1 = strtok(NULL,"|");
+                        	j++;
+                		}
+                	strcat(output1,"---------------------\n");
+        			}
+         		p = strtok(NULL,"\n");
+         	}
 
-                    
-                        p1 = strtok(NULL,"|");
-                        j++;
-                }
-                strcat(output1,"---------------------\n");
-            }
-         p = strtok(NULL,"\n");
-         }
-
-       vizitat[lineNoMax] = 1;
+       	vizitat[lineNoMax] = 1;
        ++i;
-       }
+      }
 return output1;
 }
 int is_restricted(char* user){
+        
         FILE* fin;
 
         fin = fopen("useri.txt","r");
@@ -655,55 +631,54 @@ int is_restricted(char* user){
         fclose(fin);
 return 1;
 }
-int parseInt(char *ch)
-{
-int temp=0,neg=0;
-while(*ch!=NULL)
-{
-    if(temp==0&&*ch=='-')neg=1;
-    if(*ch>='0'&&*ch<='9')
-    {
-        if(temp==0)
-        {
+int parseInt(char *ch){
+	int temp=0,neg=0;
+	
+	while(*ch!=NULL){
+    	
+    	if(temp==0&&*ch=='-')neg=1;
+
+    	if(*ch>='0'&&*ch<='9'){
+        	if(temp==0){
              temp=*ch-'0';
-        }
-        else
-        {
-             temp*=10;
-             temp+=*ch-'0';
-        }
-    }
-++ch;
-}
-if(neg==1)temp*=-1;
+        	}
+       		 else {
+             	temp*=10;
+             	temp+=*ch-'0';
+        	}
+    	}
+      ++ch;
+	}
+	if(neg==1)temp*=-1;
+
 return temp;
 }
-
-
 int vote(char* song, int vot){
 
-  char* buffer = getFileContent("melodie.txt");
-  char *p;
-  p = strtok(buffer,"\n");
-  char array[200][500];
+  	char* buffer = getFileContent("melodie.txt");
+  	char *p;
+  	p = strtok(buffer,"\n");
+  	char array[200][500];
 
-  int k  = 0,i;
-  char aux[100];
+  	int k  = 0,i;
+  	char aux[100];
 
-  while(p){
-         ++k;
-          strcpy(array[k],p);
-          p = strtok(NULL,"\n");
-  }
-  char* pch;
-  int found = 0;
+  		while(p){
+         	++k;
+          	strcpy(array[k],p);
+        	p = strtok(NULL,"\n");
+  		}	
+  
+  	char* pch;
+  	int found = 0;
 
-  for (i = 1; i <= k; ++i){
+  	for (i = 1; i <= k; ++i){
 
-      pch = strchr(array[i],'|');
-      int pos = pch-array[i]+1;
-      pos--;
-          if (strncmp(array[i],song,pos) == 0){
+      		pch = strchr(array[i],'|');
+      		int pos = pch-array[i]+1;
+      		pos--;
+          
+          	if (strncmp(array[i],song,pos) == 0){
                   found = 1;
                   pch = strrchr(array[i],'|');
                   int last = pch-array[i]+1;
@@ -723,61 +698,52 @@ int vote(char* song, int vot){
                   char vote[5];
                   sprintf(vote,"%d",vot);
                   strcpy(x+last,vote);
-          }
+          	}
 
-  }
+  	}
 
-  free (buffer);
+  	free (buffer);
 
-  FILE* fout;
+  	FILE* fout;
+  	fout = fopen("melodie.txt","w");
 
-          fout = fopen("melodie.txt","w");
-
-  for (i = 1; i <= k; ++i)
-          {
-                  if (fprintf(fout,array[i]) == -1) perror("err while updating\n");
+  	for (i = 1; i <= k; ++i){
+                if (fprintf(fout,array[i]) == -1) perror("err while updating\n");
                 if (fprintf(fout,"\n") == -1) perror("err while updating\n");
-        }
+    }
  
-         fclose(fout);
+    fclose(fout);
 return found;
 }
+
 int login_user(char* nickname, char* pass){
+	
+	FILE* fin;
+	fin = fopen("useri.txt","r");
+	char* buffer = NULL;
+    size_t len;
 
-                FILE* fin;
-
-                fin = fopen("useri.txt","r");
-
-                char* buffer = NULL;
-                size_t len;
-
-                while(getline(&buffer,&len,fin) != -1){
-                        char* p;
-
-                        p = strtok(buffer,"|");
-                        int k = 0;
-                        int ok = 0;
-                        while(p){
-                                ++k;
-                                switch(k){
-                                        case 1:{
-                                                if (strcmp(p,nickname) == 0)
-                                                {
-                                                        ok = 1;
-                                                }
-                                        }
-                                        break;
-                                        case 2:{
-                                                if (strcmp(p,pass) == 0 && ok)
-                                                {
-                                                        return 1;
-                                                }
-                                        }
-                                        break;
+		while(getline(&buffer,&len,fin) != -1){
+              char* p;
+			  p = strtok(buffer,"|");
+              int k = 0, ok = 0;
+                    
+                    while(p){
+                          ++k;
+                          switch(k){
+                                case 1:{
+                                	if (strcmp(p,nickname) == 0) ok = 1;
                                 }
-                                p = strtok(NULL, "|");
-                        }
-                }
+                                break;
+                                case 2:{
+                                   if (strcmp(p,pass) == 0 && ok) return 1;
+                                }
+                                break;
+                           }
+                        p = strtok(NULL, "|");
+                    }
+        }
+
 return 0;
 }
 /*char* generateCode(){
@@ -824,6 +790,7 @@ void emailCode(char* email){
 
 
 int checkCode(char* code){
+        
         FILE* fin;
         fin = fopen("codes.txt","r");
 
@@ -832,7 +799,8 @@ int checkCode(char* code){
 
         while(getline(&line,&len,fin) != -1){
                 if(strcmp(line,code) == 0) return 1;
-        }        
+        } 
+
 return 0;
 }
 int checkIfRegistered(char* nickname){
@@ -849,8 +817,10 @@ int checkIfRegistered(char* nickname){
                 char pos = pch-line;
                 char name[250];
                 strncpy(name,line,pos);
+                
                 if(strcmp(name,nickname) == 0) return 0;
-        }        
+        }
+
 return 1;
 }
 int register_user(char* nickname, char* parola, char* tip){
@@ -860,53 +830,30 @@ int register_user(char* nickname, char* parola, char* tip){
                 int output1Length = strlen(nickname)+strlen(parola)+strlen(tip)+7;
                 char output1[output1Length];
 
-                strcpy(output1,nickname);
-                strcat(output1,"|");
-                strcat(output1,parola);
-                strcat(output1,"|");
-                strcat(output1,tip);
-                strcat(output1,"|");
-                strcat(output1,"1");
-                strcat(output1,"|");
-                strcat(output1,"1");
-                strcat(output1,"\n");
+                	strcpy(output1,nickname);
+                	strcat(output1,"|");
+                	strcat(output1,parola);
+                	strcat(output1,"|");
+                	strcat(output1,tip);
+                	strcat(output1,"|1|1\n");
 
                 fout = fopen("useri.txt","a");
                 if (fwrite (output1 , sizeof(char), sizeof(output1), fout) <= 0){
                         perror("Err while writing to file \n");
                         return 0;
                 }
-
                 fclose(fout);
+
 return 1;
 }
-void getNickNameAndSayHello(struct thread_data* data){
-        int nameLength;
 
-        if (data->fd < 0)
-                {
-                        perror("err from client\n");
-                }
-
-                if ((nameLength = read(data->fd,data->name,250)) <= 0)
-                {
-                        perror("err while reading from client\n");
-                }
-                else {
-                        strcat(msg,"Hello ");
-                        strcat(msg,data->name);
-                        if(write(data->fd,msg,sizeof(msg)) < 0) {perror("err while writing to client hello\n");}
-                        
-                        if(write(data->fd,menuString,sizeof(menuString)) < 0) {perror("err while responding to client\n");}
-                }
-}
 void* solve_request(void *argv){
 
         pthread_t id = pthread_self();
         #define data ((struct thread_data*) argv)
 
-        if (pthread_equal(id,thread))
-        {
+        if (pthread_equal(id,thread)){
+
                 data->terminated = 1;
 
                 while(data->terminated != -1){
@@ -920,59 +867,63 @@ void* solve_request(void *argv){
                         switch(response[0]){
                                 case 's':{
                                         //########################## SIGN UP ############################
+                                        
                                         strcpy(msg,"Doriti un cont de admin? y/n\n");
-                                        if(write(data->fd,msg,sizeof(msg)) < 0) {perror("err while responding to client\n");}
+                                        
+                                        if(write(data->fd,msg,sizeof(msg)) < 0) perror("err while responding to client\n");
                                         response = readFromClient(data,msg);
+
                                                 switch(response[0]){
                                                         case 'y':{
+
                                                                 notifyUser(data,"Aveti codul de inregistrare ca admin? y/n");
                                                                 response = readFromClient(data,msg);
 
                                                                 switch(response[0]){
                                                                         case 'y':{
+                                                                        	after_inserting_code: //goto dupa ce trimite mail
+                                                                        	notifyUser(data,"Va rugam introduceti codul primit prin email..");
+                                                                        	char* code = readFromClient(data,msg);
+                                                                        	
 
-                                                                        after_inserting_code:
+                                                                        	if(checkCode(code)){
 
-                                                                        notifyUser(data,"Va rugam introduceti codul primit prin email..");
-                                                                        char* code = readFromClient(data,msg);
-                                                                        code[strlen(code)-1] = '\0';
+                                                                                	char nick_name[250];
+                                                                                	char pass[250];
 
-                                                                        if(checkCode(code)){
+                                                                                	int finish = 0;
 
-                                                                                char nick_name[250];
-                                                                                char pass[250];
+                                                                                	while(finish == 0){
+                                                                                		
+                                                                                		notifyUser(data,"Nickname:");
+                                                                                		strcpy(nick_name,readFromClient(data,msg));
+                                                                                		nick_name[strlen(nick_name)-1] = '\0';
 
-                                                                                int finish = 0;
+                                                                                		notifyUser(data,"Parola:");
+                                                                                		strcpy(pass,readFromClient(data,msg));
+                                                                                		pass[strlen(pass)-1] = '\0';
 
-                                                                                while(finish == 0){
-                                                                                notifyUser(data,"Nickname:");
-                                                                                strcpy(nick_name,readFromClient(data,msg));
-                                                                                nick_name[strlen(nick_name)-1] = '\0';
-
-                                                                                notifyUser(data,"Parola:");
-                                                                                strcpy(pass,readFromClient(data,msg));
-                                                                                pass[strlen(pass)-1] = '\0';
-
-                                                                                if (checkIfRegistered(nick_name) == 0) {
-                                                                                        notifyUser(data,"Nickname-ul nu este dispnibil, va rugam incercati alt nickname");
-                                                                                }
-                                                                                else
-
-                                                                                        if(register_user(nick_name,pass,"admin") == 1){
+                                                                                		if (checkIfRegistered(nick_name) == 0) {
+                                                                                        	notifyUser(data,"Nickname-ul nu este dispnibil, va rugam incercati alt nickname");
+                                                                                		} else 
+                                                                                	    	if(register_user(nick_name,pass,"admin") == 1){
                                                                                                 finish = 1;
                                                                                                 notifyUser(data,"Inregistrat cu succes ca admin");
-                                                                        }
-                                                                                }
-                                                                        }
-                                                                        else {
 
-                                                                                notifyUser(data,"Codul este invalid");
+                                                                                                strcpy(data->nickname,nick_name);
+                                                												strcpy(data->pass,pass);
+
+                                                												goto after_register_login_point;
+
+                                                                        					}
+                                                                                	}
+                                                                        	} else notifyUser(data,"Codul este invalid \n");
                                                                         
-                                                                        }
-                                                                        }
+                                                                    	}
                                                                         break;
-                                                                        case 'n':
-                                                                        {
+
+                                                                        case 'n':{
+                                                                        
                                                                         notifyUser(data,"Va rugam introduceti email-ul");
 
                                                                         char email[250];
@@ -989,11 +940,11 @@ void* solve_request(void *argv){
                                                                 }
                                                         }
                                                         break;
+
                                                         case 'n':{
 
-
-                                                        char nick_name[250];
-                                                        char pass[250];
+                                                        	char nick_name[250];
+                                                        	char pass[250];
 
                                                                 notifyUser(data,"Nickname:");
                                                                 strcpy(nick_name,readFromClient(data,msg));
@@ -1004,12 +955,15 @@ void* solve_request(void *argv){
                                                                 pass[strlen(pass)-1] = '\0';
 
                                                                 if (checkIfRegistered(nick_name) == 0) {
-                                                                notifyUser(data,"Nickname-ul nu este disponibil, va rugam incercati altul");
+                                                                	notifyUser(data,"Nickname-ul nu este disponibil, va rugam incercati altul");
                                                                 }
                                                                 else
 
                                                                 if(register_user(nick_name,pass,"user") == 1){
                                                                                 printf("successfully registered\n");
+                                                                                strcpy(data->nickname,nick_name);
+                                                								strcpy(data->pass,pass);
+                                                								goto after_register_login_point;
                                                                 }
                                                                 else printf("Eroare la logare\n");
                                                                 
@@ -1018,6 +972,7 @@ void* solve_request(void *argv){
                                                 }
                                 }
                                 break;
+                                
                                 case 'l':{
                                         //########################## LOGIN ############################
                                         notifyUser(data,"User:");
@@ -1034,8 +989,12 @@ void* solve_request(void *argv){
                                         
                                         if(login_user(user,pass) == 1) {
 
-                                                strcpy(data->nickname,user);
-                                                strcpy(data->pass,pass);
+                                        	strcpy(data->nickname,user);
+                                            strcpy(data->pass,pass);
+
+                                        	after_register_login_point:
+
+                                                
 
                                                 data->admin = isAdmin(data->nickname);
 
@@ -1047,18 +1006,18 @@ void* solve_request(void *argv){
                                                         if(write(data->fd,menuUser,sizeof(menuUser)) < 0) perror("err while responding to client\n");
                                                 }
                                                 else 
-                                                        if(write(data->fd,menuAdmin,sizeof(menuAdmin)) < 0) perror("err while responding to client\n");
+                                                	if(write(data->fd,menuAdmin,sizeof(menuAdmin)) < 0) perror("err while responding to client\n");
                                                         
-                                                
-                                                
                                                 strcpy(answer, readFromClient(data,msg));
+                                                
                                                 if(answer[1] == '\n')
                                                         switch (answer[0]){
                                                                 case 'v':{
-                                                                        //voteaza
+                                                                        //########################## VOTE ############################
                                                                         if (is_restricted(data->nickname) == 0){
                                                                                 notifyUser(data,"Ne pare rau dar nu mai puteti vota..:(\n");
                                                                         } else {
+                                                                                
                                                                                 char numeMelodie[250];
                                                                                 char votC[10];
 
@@ -1076,39 +1035,43 @@ void* solve_request(void *argv){
                                                                                 if(canIVote(data->nickname,numeMelodie) == 0){
                                                                                         notifyUser(data,"Nu mai poti vota aceeasi melodie :( \n");
                                                                                 } else 
-                                                                                if(vote(numeMelodie,vot) != 0){
+                                                                                	if(vote(numeMelodie,vot) != 0){
                                                                                         notifyUser(data,"Ati votat cu succes!");
                                                                                         markVote(data->nickname,numeMelodie);
-                                                                                } else {
+                                                                                	} else {
                                                                                         notifyUser(data,"Melodia nu a fost gasita in top :( \n");
-                                                                                }
+                                                                                	}
 
                                                                         }
                                                                 }
                                                                 break;
+
                                                                 case 'a':{
-                                                                        //afiseaza top general
+                                                                        //########################## SHOW TOP ############################
                                                                         char* buf = showTopFromVote(getFileContent("melodie.txt"));
-                                                                        if(write(data->fd,buf,strlen(buf)) < 0) perror("err while responding to client\n"); 
-                                                                             
+                                                                        if(write(data->fd,buf,strlen(buf)) < 0) perror("err while responding to client\n");                   
                                                                 }
                                                                 break;
+
                                                                 case 'g':{
-                                                                        //afiseaza top dupa gen
+                                                                        //########################## SHOW TOP FROM GENDRE ############################
+                                                                        
                                                                         notifyUser(data,"Introdu gen:");
                                                                         char gen[250];
                                                                         strcpy(gen,readFromClient(data,msg));
                                                                         gen[strlen(gen)-1] = '\0';
+
                                                                         char buffer[25000];
                                                                         strcpy(buffer,showTopByGendre(getFileContent("melodie.txt"),gen));
                                                                         if (strcmp(buffer,"") == 0) 
                                                                                 notifyUser(data,"Ne pare rau dar genul introdus nu se afla in baza de date\n");
-                                                                        else 
-                                                                        notifyUser(data,buffer);
+                                                                        else notifyUser(data,buffer);
                                                                 }
                                                                 break;
+
                                                                 case 'c':{
-                                                                        //comenteaza melodie
+                                                                        //########################## COMMENT SONG ############################
+                                                                       
                                                                         notifyUser(data,"Nume melodie:");
                                                                         char nume[250];
                                                                         strcpy(nume,readFromClient(data,msg));
@@ -1126,11 +1089,12 @@ void* solve_request(void *argv){
                                                                                 notifyUser(data,"Va multumim pentru comentariu :)\n");
                                                                         else notifyUser(data,"oops..ceva nu a functionat la adaugarea comentariului :(\n poate ca melodia introdusa nu se afla in top ;)\n");
                                                                         
-
                                                                 }
                                                                 break;
+
                                                                 case 's':{
-                                                                        //cauta melodie
+                                                                        //########################## SEARCH SONG ############################
+                                                                       
                                                                         notifyUser(data,"Nume melodie:");
                                                                         char nume[250];
                                                                         strcpy(nume,readFromClient(data,msg));
@@ -1140,11 +1104,13 @@ void* solve_request(void *argv){
                                                                         if(strcmp(output1,"") == 0) notifyUser(data,"Melodia nu a fost gasita");
                                                                         else {
                                                                                 notifyUser(data,output1);
-                                                                                if(strcmp(getComm(nume),"") == 0){}
+                                                                                if(strcmp(getComm(nume),"") == 0){
+                                                                                	//do nothing
+                                                                                }
                                                                                 else{
-                                                                                notifyUser(data,"--------Comentarii---------\n");
-                                                                                notifyUser(data,getComm(nume));
-                                                                                notifyUser(data,"---------------------------\n");
+                                                                                	notifyUser(data,"--------Comentarii---------\n");
+                                                                                	notifyUser(data,getComm(nume));
+                                                                                	notifyUser(data,"---------------------------\n");
                                                                                 }
                                                                         }
                                                                 }
@@ -1152,6 +1118,7 @@ void* solve_request(void *argv){
 
                                                                 case 'r':{
                                                                         //########################## RESTRICT USER ############################
+                                                                        
                                                                         if (!data->admin) notifyUser(data,"Nu poti executa comanda intrucat nu ai drept de admin ;)\n");
                                                                         else {
                                                                                 notifyUser(data,"Introduceti nickname-ul pentru user-ul pe care vreti sa-l restrictionati...");
@@ -1162,14 +1129,17 @@ void* solve_request(void *argv){
                                                                                 int restricted = restrictUser(name);
 
                                                                                 if(restricted == 1) notifyUser(data,"Userul a fost restrictionat :) \n");
-                                                                                else if (restricted == 2) notifyUser(data,"Userul a fost scos de sub restrictie :) \n");
-                                                                                else notifyUser(data,"User-ul nu a putut fi restrictionat...\n");
+                                                                                else 
+                                                                                	if (restricted == 2) notifyUser(data,"Userul a fost scos de sub restrictie :) \n");
+                                                                                	else notifyUser(data,"User-ul nu a putut fi restrictionat...\n");
 
                                                                         }
                                                                 }
                                                                 break;
+
                                                                 case 'd':{
                                                                         //########################## DELETE ############################
+                                                                       
                                                                         if (!data->admin) notifyUser(data,"Nu poti executa comanda intrucat nu ai drept de admin ;)\n");
                                                                         else {
                                                                                 notifyUser(data,"Introduceti numele melodiei pentru stergere...");
@@ -1185,43 +1155,41 @@ void* solve_request(void *argv){
 
                                                                                 }
                                                                                 else notifyUser(data,"Melodia nu se afla in top\n");
-
-                                                                                
+    
                                                                         }
                                                                 }
                                                                 break;
+
                                                                 case 'm':{
                                                                         //########################## ADD_SONG ############################
+                                                                       
                                                                         if (!data->admin) notifyUser(data,"Nu poti executa comanda intrucat nu ai drept de admin ;)\n");
-                                                                        else {
-                                                                                addSong(data);
-                                                                        }
+                                                                        else addSong(data);
+                                                                        
                                                                 }
                                                                 break;
+
                                                                 case 'l':{
                                                                         //logout
                                                                         strcpy(msg,"Ai fost delogat cu succes, ");
                                                                         strcat(msg,data->nickname);
                                                                         if(write(data->fd,msg,sizeof(msg)) < 0) perror("err while responding to client\n");
-                                                                        {
-                                                                                close(data->fd);
-                                                                                *(data->clientID+data->pos) = -1;
-                                                                                bzero(msg,1024);
-                                                                                strcpy(msg,data->name);
-                                                                                strcat(msg," has left the chat\n");        
-                                                                                char who[] = "server";
-                                                                                printf("%s",msg);
-                                                                                data->terminated = -1;
-                                                                        }
-                                                                        
+                                                                                
+                                                                        close(data->fd);
+                                                                        *(data->clientID+data->pos) = -1;
+                                                                        bzero(msg,1024);
+                                                                        strcpy(msg,data->nickname);
+                                                                        strcat(msg," has closed the connection\n");        
+                                                                        printf("%s",msg);
+                                                                        data->terminated = -1;
                                                                 }
                                                                 break;
+
                                                                 default:{
                                                                         strcpy(msg,"Va rugam introduceti o comanda valida!");
                                                                         if(write(data->fd,msg,sizeof(msg)) < 0) perror("err while responding to client\n");
                                                                 }
                                                                 break;
-
                                                         }
 
                                                 }
@@ -1230,11 +1198,10 @@ void* solve_request(void *argv){
                                         } else {
                                                 strcpy(msg,"Logare esuata!");
                                                 if(write(data->fd,msg,sizeof(msg)) < 0) perror("err while responding to client\n");
-
-                                        }
-                                                                
+                                        }                       
                                 }
                                 break;
+
                                 case 'q':{
 
                                         //########################## QUIT ############################
@@ -1244,8 +1211,7 @@ void* solve_request(void *argv){
                                         *(data->clientID+data->pos) = -1;
                                         bzero(msg,1024);
                                         strcpy(msg,data->nickname);
-                                        strcat(msg," has left the chat\n");        
-                                        char who[] = "server";
+                                        strcat(msg," has closed the connection\n");        
                                         printf("%s",msg);
                                         data->terminated = -1;
                                 }
@@ -1253,7 +1219,6 @@ void* solve_request(void *argv){
                         }
                 }
         }
-
 return NULL;
 }
 int main(int argc, char *argv[]){
@@ -1263,8 +1228,7 @@ int main(int argc, char *argv[]){
         int sockFD;
 
 
-        if ((sockFD = socket(AF_INET,SOCK_STREAM,0)) == -1)
-        {
+        if ((sockFD = socket(AF_INET,SOCK_STREAM,0)) == -1){
                 perror("err while socketing..\n");
                 return 0;
         }
@@ -1272,7 +1236,7 @@ int main(int argc, char *argv[]){
         int opt = 1;
         int port = atoi(argv[1]);
 
-        setsockopt(sockFD,SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+        setsockopt(sockFD,SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); //refolosim adresa 
 
         bzero(&server,sizeof(server));
         bzero(&from,sizeof(from));
@@ -1281,26 +1245,23 @@ int main(int argc, char *argv[]){
         server.sin_addr.s_addr = htonl(INADDR_ANY);
         server.sin_port = htons(port);
 
-        if (bind(sockFD,(struct sockaddr*)&server,sizeof(struct sockaddr)) == -1)
-        {
+        if (bind(sockFD,(struct sockaddr*)&server,sizeof(struct sockaddr)) == -1){
+
                 perror("err while binding\n");
                 return 0;
         }
 
-        if (listen(sockFD,5) < 0)
-        {
+        if (listen(sockFD,5) < 0){
                 perror("err while listening\n");
         }
 
         struct thread_data *data1;
-
-
         int clientID[100];
         int clientIterator = 0;
 
         while(1){
-                 sizeOfFrom = sizeof(from);
-
+                
+                sizeOfFrom = sizeof(from);
                 printf("waiting at port %d\n", port);
 
                 clientFD = accept(sockFD,(struct sockaddr*)&from,&sizeOfFrom);
@@ -1312,16 +1273,15 @@ int main(int argc, char *argv[]){
                 clientID[++clientIterator] = clientFD;
                 data1->pos = clientIterator;
 
+                //pasam thread-urilor fiecare noua conexiune cu clientul
+
                 int err = pthread_create(&thread,NULL,&solve_request,(void*) data1);
 
-                if (err)
-                {
+                if (err){
                         perror("err while creating thread\n");
                         return 0;
                 }
-                else 
-                        printf("thread created successfully\n");
-
+                else printf("thread created successfully\n");
         }
 
 return 0;
