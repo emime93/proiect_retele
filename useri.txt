@@ -1,0 +1,2 @@
+emime|salut|admin|1|1
+ervin|necula|user|1|1
