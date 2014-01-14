@@ -1,0 +1,541 @@
+<html>
+<head>
+<title>Documentatie Top-Music</title>
+</head>
+<body>
+<div style='width:900px;position:absolute;margin:0px 0 0 -450px;top:0px;left:50%;'>
+<p>
+</br>
+Documentatie proiect "Top Music"</br>    
+Created by Petricioiu Robert on 26/11/2013</br>
+Copyright &copy; 2013 Petricioiu Robert. All rights reserved</br>
+</p>
+<h1 style='color:#313131;'>&rarr;Descriere</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:5px 5px 5px 5px;font-family:"Times New Roman"'>
+Aplicatie de tip client/server pentru managementul unui top muzical ce contine genuri 
+diverse. Administratorul poate crea un gen nou atunci cand adauga o melodie...in alte cuvinte nu exista restrictii in ce priveste diversitatea genurilor.
+</h5>
+<h1 style='color:#313131;'>&rarr;Functionalitati</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:5px 5px 5px 5px;font-family:"Times New Roman"'>
+1. Inregistrarea utilizatorilor de tip admin, ordinary </br>
+2. Logarea in sistem  </br>
+3. Adaugarea unei melodii la top </br>
+4. Votarea unei melodii </br>
+5. Afisarea topului general in functie de vot </br>
+6. Afisarea topului pentru un anumit gen de muzica </br>
+7. Postarea comentariilor de catre useri </br>
+8. Administratorul poate sterge melodii din top si va putea restrictiona/derestrictiona votul unui user </br>
+</h5>
+<h1 style='color:#313131;'>&rarr;Descriere entitati</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:5px 5px 5px 5px;font-family:"Times New Roman"'>
+* user ( nickname, parola, tip (admin sau user simplu), logat, restrictionat) </br>
+* melodie (nume, descriere, genuri, link, vot) </br>
+</br>
+Specificatii legate de implementarea functionalitatilor </br>
+</br>
+* la pornirea aplicatiei se va afisa un meniu cu urmatoarele optiuni </br>
+(pentru selectarea optiunii se va introduce shortcut-ul optiunii) </br>
+</br>
+  <div align='center'>
+        <div style='cursor:pointer;width:80px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Sign up (s)</div>
+        <div style='cursor:pointer;width:80px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Login   (l)</div>
+        <div style='cursor:pointer;width:80px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Exit    (q)</div>
+  </div>
+</h5>
+
+<h1 style='color:#313131;'>&rarr;Inregistrarea utilizatorilor</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Dupa selectarea optiunii (s) din meniul principal userul va fi intrebat daca doreste sa 
+  creeze un cod de admin sau de user obisnuit. In cazul in care raspunde DA i se va cere un cod.
+  In cazul in care userul nu detine codul respectiv, i se va cere sa introduca email-ul (momentan serverul trimite doar pe yahoo), dupa ce userul introduce email-ul, serverul va genera un index ce pointeaza catre unul din codurile stocate in fisierul codes.txt, dupa care va trimite codul catre email-ul introdus.
+  Dupa trimiterea codului, userul va merge mai departe spre meniul de inregistrare, 
+  altfel, daca va raspunde NU la prima intrebare, va merge direct la meniul de inregistrare.
+  I se va cere consecutiv sa introduca Nickname-ul si parola.</br>In cazul in care userul doreste 
+  sa fie admin si codul introdus de acesta este valid, campul tip al userului va avea valoarea 
+  admin.</br>
+  Dupa completarea inregistrarii, userul va fi logat automat.
+</h5>
+
+<h1 style='color:#313131;'>&rarr;Logarea utilizatorilor</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Dupa selectarea optiunii (l) din meniul principal, I se va cere user-ului sa introduca nickname si 
+  parola. In cazul in care nickname-ul si parola se potrivesc se va face update la atributul logat al 
+  user-ului si se va afisa un mesaj de bun venit, impreuna cu un meniu ce va contine urmatoarele optiuni
+  (meniul de mai jos contine optiuni pentru userul obisnuit):</br></br>
+   <div align='center'>
+    <div style='cursor:pointer;width:200px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Voteaza melodie&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(v)</div>
+    <div style='cursor:pointer;width:200px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Afisare top general&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(a)</div>
+   <div style='cursor:pointer;width:200px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';"> Afisare top dupa gen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(g)</div>
+   <div style='cursor:pointer;width:250px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';"> Comentariu la o melodie&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(c)</div>
+   <div style='cursor:pointer;width:200px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';"> Vizualizarea unei melodii&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(m)</div>
+   </div>
+</br>
+  Pentru votarea unei melodii se va introduce litera v urmata de numele melodiei. Votul poate fi -1 pentru negativ sau orice alta valoarea pentru pozitiv.</br>
+
+  Pentru plasarea unui comentariu se va introduce litera c. Daca melodia exista 
+  I se va cere utilizatorului sa introduca un comentariu de la tastatura.</br>
+
+  Pentru vizualizarea comentariilor unei melodii precum si link-ul si descrierea se va introduce litera m
+  urmata de numele melodiei. In cazul in care melodia este gasita in baza de date se va afisa link-ul 
+  melodiei, descrierea acesteia si comentariile userilor, precum si rating-ul bazat pe votul userilor.</br>
+
+  In cazul in care userul logat este de tip admin meniul afisat dupa logare va mai contine urmatoarele 
+  optiuni:</br></br>
+  <div align='center'>
+      <div style='cursor:pointer;width:200px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Adauga melodie in top       (t)</div>
+      <div style='cursor:pointer;width:200px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Sterge melodie din top      (s)</div>
+      <div style='cursor:pointer;width:210px;text-align:center;' onmouseover="this.style.backgroundColor='#900';" onmouseout="this.style.backgroundColor='transparent';">Restrictioneaza votul unui user (r)</div>
+  </div>
+  </br>
+  Pentru adaugarea unei melodii in top se va introduce litera t. Dupa introducerea literei t user-ului I se va cere pe rand Numele melodiei, Descrierea, Numarul de genuri din care face parte, genurile, si link-ul melodiei.
+</br>
+  Pentru stergerea unei melodii din top se va introduce litera s urmata de numele melodiei.
+  Pentru restrictionarea unui user la dreptul de vot se va introduce litera r urmata de nickname-ul 
+  userului.
+  In cazul unei restrictionari userul va fi interogat din nou asupra confirmarii operatiunii de 
+  restrictionare.
+</h5>
+<h1 style='color:#313131;'>&rarr;Stocarea datelor</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  Stocarea datelor se va face folosind fisiere de tip .txt cu format special.</br>
+  Vom avea cate un fisier pentru fiecare entitate: useri.txt, melodii.txt</br>
+  Pentru useri fiecare inregistrare de date va avea formatul:</br>
+</br>
+      <div align='center'>nickname|parola|tip|logat|restrictionat</div>
+</br>
+  (*) fiecare inregistrare este urmata de newline
+</br>
+  Pentru melodii inregistrarea de date va avea formatul:
+</br></br>
+      <div align='center'>nume_melodie|descriere|nr_gen|gen1|gen2|..|link|vot</div>
+</h5>
+
+<h1 style='color:#313131;'>&rarr;Protocoale folosite</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Pentru comunicarea client ↔ server se va folosi protocolul TCP/IP. Serverul va fi unul concurent 
+  iar implementarea lui va fi facuta pe baza de thread-uri intrucat consumul de memorie este diminuat,
+  iar lucrul cu thread-uri este relativ usor. 
+</br></br>
+  In codul client paralelismul va fi realizat pe baza functiei select().
+</h5>
+<h1 style='color:#313131;'>&rarr;API-ul folosit</h1>
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Urmatoarele pagini vor descrie o parte din API-ul folosit in aplicatie.
+  Pentru inregistrarea unui user vom folosi functia register_user(char*,char*,char*) 
+  avand implementarea de mai jos. Functia se asigura ca argumentele date ca parametrii sa nu fie vide
+  dupa care creaza un sir de caractere ce contine informatiile pentru stocare sub formatul declarat 
+  anterior. In final se va face append in fisierul useri.txt la o noua linie de date.
+</h5>
+
+<!--INREGISTRARE USER-->
+
+<div style='background-color:#900;color:#fff;border-radius:5px;box-shadow:0px 0px 2px 3px #999;'>
+<pre>
+	<code language='c'>
+int register_user(char* nickname, char* parola, char* tip){
+  if (strcmp(nickname,"") == 0 || strcmp(parola,"") == 0)
+  {
+    printf("Please input a nickname and password\n");
+    return 0;
+  }
+  else {
+    FILE* fout;
+ 
+    int outputLength = strlen(nickname)+strlen(parola)+strlen(tip)+5;
+    char output[outputLength];
+ 
+    strcpy(output,nickname);
+    strcat(output,"|");
+    strcat(output,parola);
+    strcat(output,"|");
+    strcat(output,tip);
+    strcat(output,"|");
+    strcat(output,"1");
+    strcat(output,"|");
+    strcat(output,"0");
+    strcat(output,"\n");
+ 
+    fout = fopen("useri.txt","a");
+    printf("%s\n", output);
+    if (fwrite (output , sizeof(char), sizeof(output), fout) <= 0){
+      perror("Err while writing to file \n");
+      return 0;
+    }
+ 
+    fclose(fout);
+  }
+ return 1;
+ }
+ </code>
+</pre>
+</div>
+ <h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Pentru logarea unui user se va folosi functia login_user(char*, char*) avand ca parametrii doua siruri de 
+  caractere ce reprezinta nickname-ul respectiv parola utilizatorului.
+  Prin functie se va incerca sa faca match la atributele functiei cu nickname-urile si parolele de pe
+  fiecare linie a fisierului useri.txt.
+</h5>
+
+<!--LOGARE USER-->
+
+<div style='background-color:#900;color:#fff;border-radius:5px;box-shadow:0px 0px 2px 3px #999;'>
+<pre>
+  <code language='c'>
+int login_user(char* nickname, char* pass){
+
+    FILE* fin;
+
+    fin = fopen("useri.txt","r");
+
+    char* buffer = NULL;
+    size_t len;
+
+    while(getline(&buffer,&len,fin) != -1){
+      char* p;
+
+      p = strtok(buffer,"|");
+      int k = 0;
+      int ok = 0;
+      while(p){
+        ++k;
+        switch(k){
+          case 1:{
+            if (strcmp(p,nickname) == 0)
+            {
+              ok = 1;
+            }
+          }
+          break;
+          case 2:{
+            if (strcmp(p,pass) == 0 && ok)
+            {
+              return 1;
+            }
+          }
+          break;
+        }
+        p = strtok(NULL, "|");
+      }
+    }
+return 0;
+}
+</code>
+</pre>
+</div>
+
+<!--INREGISTRARE USER-->
+
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Pentru adaugarea unei melodii se va folosi functia add_song(char*, char*, int, char**, char*) ce 
+  primeste ca parametrii Numele melodiei, Descrierea, un numar intreg ce reprezinta numarul de genuri
+  carora apartine melodia, un array de cuvinte ce reprezinta genurile si in cele din urma un sir de caractere
+  ce contine link-ul melodiei.
+  </br>
+
+</h5>
+
+<div style='background-color:#900;color:#fff;border-radius:5px;box-shadow:0px 0px 2px 3px #999;'>
+<pre>
+  <code language='c'>
+int add_song(char* nume, char* descriere, int nrGen, char genuri[10][250]){
+  if (strcmp(nume,"") == 0 || strcmp(descriere,"") == 0 || nrGen == 0)
+  {
+    printf("va rugam completati nume,descriere si genurile melodiei\n");
+    return 0;
+  }
+  FILE* fout;
+
+  fout = fopen("melodie.txt","a");
+
+  char buffer[1024];
+
+  strcpy(buffer, nume);
+  strcat(buffer,"|");
+  strcat(buffer,descriere);
+  strcat(buffer,"|");
+  char nrGenStr[5];
+  sprintf(nrGenStr,"%d",nrGen);
+  strcat(buffer,nrGenStr);
+  strcat(buffer,"|");
+
+  int i;
+
+  for (i = 0; i < nrGen; ++i){
+    strcat(buffer,genuri[i]);
+    strcat(buffer,"|");
+  }
+  strcat(buffer,"\n");
+  
+  if (fprintf(fout, "%s",buffer) == -1){
+    perror("err while saving the song\n");
+    return 0;
+  }
+  
+return 1;
+}
+ </code>
+</pre>
+</div>
+
+<!--VOT MELODIE-->
+
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  Pentru votarea unei melodii de catre un participant se va folosi functia vote(char*,int) care primeste ca parametrii numele melodiei respectiv votul acordat (votul poate fi orice numar pozitiv sau valoarea -1). </br> Atunci cand functia primeste ca vot valoarea -1, se va scadea o unitate din numarul total de voturi ale melodiei. </br></br>
+  Pentru ca lucrul cu fisiere este destul de complicat, am decis sa copiez tot fisierul intr-un buffer alocat dinamic si sa prelucrez textul pe bufferul respectiv. 
+  Am parcurs bufferul si cu ajutorul functiei strtok() am impartit textul in siruri de caractere ce contin
+  cate o linie fiecare. Am copiat apoi fiecare sir de caractere intr-o matrice de caractere ca sa pot prelucra mai usor. 
+  </br></br>
+  Atunci cand numele melodiei a fost gasit in sir, prin compararea fiecarui caracter al melodiei cu primele strlen(nume_melodie) caractere, se cauta ultima aparitie a caracterului '|' ce reprezinta locul in care a fost stocat votul melodiei. Se copiaza din pozitia gasita pana la finalul string-ului, sirul copiat este intocmai numarul de voturi. Se face conversie la int prin functia parseInt(char* ch), se adauga sau se scade o unitate in functie de vot si se rescrie in matricea de caractere.
+  </br></br>
+  In functia parseInt se ia caracter cu caracter si se face conversie la int prin scaderea caracterului '0', dupa care se formeaza progresiv in variabila temp, numarul din *ch prin inmultirea variabilei temp cu 10 si adunarea la aceasta, cifra rezultata prin scaderea caracterului '0' din *ch;
+  </br>
+  </br>
+  Inainte de apelarea functiei vote(char* ,int ) se va apela functia is_restricted(char* ) care va lua ca parametru un sir de caractere ce reprezinta nickname-ul user-ului si va verifica daca acesta are sau nu restrictie asupra votului.
+  
+</h5>
+
+<div style='background-color:#900;color:#fff;border-radius:5px;box-shadow:0px 0px 2px 3px #999;'>
+<pre>
+  <code language='c'>
+int parseInt(char *ch)
+{
+int temp=0,neg=0;
+while(*ch!=NULL)
+{
+    if(temp==0&&*ch=='-')neg=1;
+    if(*ch>='0'&&*ch<='9')
+    {
+        if(temp==0)
+        {
+             temp=*ch-'0';
+        }
+        else
+        {
+             temp*=10;
+             temp+=*ch-'0';
+        }
+    }
+++ch;
+}
+if(neg==1)temp*=-1;
+return temp;
+}
+
+char* getFileContent(char* fileName){
+
+  FILE * pFile;
+
+  long lSize;
+  char * buffer;
+  size_t result;
+
+  pFile = fopen ( fileName , "rb" );
+  if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+
+  fseek (pFile , 0 , SEEK_END);
+  lSize = ftell (pFile);
+  rewind (pFile);
+
+  buffer = (char*) malloc (sizeof(char)*lSize);
+  if (buffer == NULL) {fputs ("Memory error",stderr); exit (2);}
+
+  result = fread (buffer,1,lSize,pFile);
+  if (result != lSize) {fputs ("Reading error",stderr); exit (3);}
+
+  fclose (pFile);
+return buffer;
+}
+void vote(char* song, int vot){
+
+  
+
+  char* buffer = getFileContent("melodie.txt");
+  char *p;
+  p = strtok(buffer,"\n");
+  char array[200][500];
+
+  int k  = 0,i;
+  char aux[100];
+
+  while(p){
+  ++k;
+    strcpy(array[k],p);
+    p = strtok(NULL,"\n");
+  }
+
+  for (i = 1; i <= k; ++i){
+    if (strncmp(array[i],song,strlen(song)) == 0){
+      char *pch;
+      pch = strrchr(array[i],'|');
+      int last = pch-array[i]+1;
+      
+      char *x = array[i];
+      char existingVoteStr[5];
+      strcpy(existingVoteStr,x+last);
+
+        if (vot == -1){
+          vot = parseInt(existingVoteStr);
+          vot--;
+        }
+        else{
+          vot = parseInt(existingVoteStr);
+          vot++;
+        }
+      char vote[5];
+      sprintf(vote,"%d",vot);
+      strcpy(x+last,vote);
+    }
+  }
+  free (buffer);
+
+  FILE* fout;
+
+    fout = fopen("melodie.txt","w");
+
+  for (i = 1; i <= k; ++i)
+    {
+      if (fprintf(fout,array[i]) == -1) perror("err while updating\n");
+    if (fprintf(fout,"\n") == -1) perror("err while updating\n");
+  }
+ 
+  fclose(fout);
+
+}
+ </code>
+</pre>
+</div>
+<!-- VERIFICA DREPTURI VOT -->
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  Inainte de a apela functia vote() suntem nevoiti sa verificam drepturile de vot ale user-ului. Facem asta prin apelarea functiei is_restricted(char*) care primeste ca parametru un sir de caractere ce reprezinta nickname-ul user-ului si returneaza 0 in cazul in care user-ul nu poate vota si 1 altfel.
+  </br></br>
+  Citim linie cu linie pana gasim linia care contine nickname-ul care ne intereseaza cautam prima aparitie parcurgand de la coada la cap a caracterului '|'' ce ne indinca locul care specifica restrictia user-ului asupra votului.
+  </br>
+
+</h5>
+
+<div style='background-color:#900;color:#fff;border-radius:5px;box-shadow:0px 0px 2px 3px #999;'>
+<pre>
+  <code language='c'>
+int is_restricted(char* user){
+
+  FILE* fin;
+
+  fin = fopen("useri.txt","r");
+
+  size_t len;
+  char* line = NULL;
+
+  while(getline(&line,&len,fin) != -1){
+
+    if (strncmp(user,line,strlen(user)) == 0){
+      char* p;
+      p = strrchr(line,'|');
+      if (line[p-line+1] != '1') return 0; 
+    }
+  }
+  fclose(fin);
+return 1;
+}
+ </code>
+</pre>
+</div>
+
+<!-- ARATA TOPUL DUPA VOT -->
+<h5 style='box-shadow:inset 0px 0px 1px 2px #000;color:#fff;background-color:#313131;padding:10px 10px 10px 10px;font-family:"Times New Roman"'>
+  
+    Pentru a afisa topul in functie de vot se va apela functia showTopFromVote(char*) care ia ca parametru un sir ce reprezinta bufferul creat dupa citirea fisierului. Functia prelucreaza datele din buffer in felul urmator:
+
+    </br></br>
+
+    Se copiaza bufferul intr-o matrice pentru o mai buna manipulare a textului. Se parcurge fiecare
+    linie din matricea de caractere si cu ajutorul functiei strrchr se gaseste prima aparitie a simbolului '|' care ne indica locul unde se afla sirul cu votul melodiei.
+
+    </br></br>
+
+    Se face conversia sirului gasit la int si se compara cu un maxim, daca numarul este mai mare ca maximul decis se va marca intr-un vector de aparitie linia vizitata si se va copia linia intr-o alta matrice...ideea e sa copiem toate liniile din matricea initiala intr-o alta matrice dupa criteriul de
+    ordonare descrescator al liniilor de matrice in functie de votul acordat.
+
+    </br></br>
+
+    In cele din urma vom formata textul din noua matrice de caractere si il vom afisa in fisierul standard de iesire.
+    
+  </br>
+
+</h5>
+
+<div style='background-color:#900;color:#fff;border-radius:5px;box-shadow:0px 0px 2px 3px #999;'>
+<pre>
+  <code language='c'>
+void showTopFromVote(char* buffer){
+  
+  int vot;
+  char maximum = -9999;
+
+  char array[200][500];
+  int k  = 0,i;
+  char* p = strtok(buffer,"\n");
+  while(p){
+  ++k;
+    strcpy(array[k],p);
+    p = strtok(NULL,"\n");
+  }
+
+  char array1[200][500];
+  
+  int j,l;
+  for (j = 1; j <= k; ++j){
+  for (i = 1; i <= k; ++i){
+      char *pch;
+      pch = strrchr(array[i],'|');
+      int last = pch-array[i]+1;
+      
+      char *x = array[i];
+      char existingVoteStr[5];
+      strcpy(existingVoteStr,x+last);
+      vot = parseInt(existingVoteStr);
+      if(vot > maximum && vizitat[i] == 0){maximum = vot; l = i;}
+      
+  }
+
+  strcpy(array1[j],array[l]);vizitat[l] = 1;
+  maximum = -9999;
+} 
+
+  char* songAttributes[] = {"Nume","Descriere","Gen","Vot"};
+  for (i = 1; i <= k; ++i){
+    p = strtok(array[i],"|");
+    j = 0;
+    int numberOfGendres;
+    l = 0;
+    while (p){
+      
+      if (j > 2 && j < 2+numberOfGendres) printf("%s: %s\n", songAttributes[l],p);
+      else {
+      if (j != 2){printf("%s: %s\n",songAttributes[l],p);++l;}
+      else numberOfGendres = parseInt(p);
+      }
+
+
+      p = strtok(NULL,"|");
+      j++;
+    }
+    printf("---------------------\n");
+  }
+
+free (buffer);
+}
+ </code>
+</pre>
+</div>
+
+
+</div>
+</body>
+</html>

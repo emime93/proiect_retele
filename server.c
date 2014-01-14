@@ -277,22 +277,16 @@ char* searchSong(char* song){
         fclose(fout);
 return output1;
 }
-int checkIfSongExists(char* song){
-        FILE* fout;
-        size_t len;
-        char* line = NULL;
-        int ok = 0;
-        char* pch;
+int checkIfSongExists(char song[100]){
+        
+        char toSeek[110];
+        strcpy(toSeek,song);
+        strcat(toSeek,"|");
+        int ok = 1;
+        char *buffer = getFileContent("melodie.txt");
 
-        	fout = fopen("melodie.txt","r");
-				while (getline(&line,&len,fout) != -1) {
-                        pch = strchr(line,'|');
-                        int pos = pch-line+1;
-                        pos--;
-                        if (strncmp(line,song,pos) == 0) ok = 1;
-                }
-        	fclose(fout);
-
+                       char *a = strstr(buffer,toSeek);
+                       if(a == NULL) ok = 0;
 return ok;
 }
 int addSong(struct thread_data* data){
@@ -313,6 +307,10 @@ int addSong(struct thread_data* data){
                                 		notifyUser(data,"Nume:");
                                         strcpy(input,readFromClient(data,input));
                                         input[strlen(input)-1] = '\0';
+
+
+                                        if(checkIfSongExists(input) == 1) return -1;
+
                                                 strcat(buffer,input);
                                                 strcat(buffer,"|");
                                 break;
@@ -326,6 +324,7 @@ int addSong(struct thread_data* data){
                                         notifyUser(data,"Numar genuri:");
                                         strcpy(input,readFromClient(data,input));
                                         input[strlen(input)-1] = '\0';
+                                        if(!isdigit(input[0])) return 0;
                                         		strcat(buffer,"|");
                                         		strcat(buffer,input);
                                         		nrGen = atoi(input);
@@ -895,6 +894,8 @@ void* solve_request(void *argv){
 
                                                                                 	while(finish == 0){
                                                                                 		
+                                                                                    if_nickname_not_available: 
+
                                                                                 		notifyUser(data,"Nickname:");
                                                                                 		strcpy(nick_name,readFromClient(data,msg));
                                                                                 		nick_name[strlen(nick_name)-1] = '\0';
@@ -904,7 +905,8 @@ void* solve_request(void *argv){
                                                                                 		pass[strlen(pass)-1] = '\0';
 
                                                                                 		if (checkIfRegistered(nick_name) == 0) {
-                                                                                        	notifyUser(data,"Nickname-ul nu este dispnibil, va rugam incercati alt nickname");
+                                                                                        	notifyUser(data,"Nickname-ul nu este disponibil, va rugam incercati alt nickname \n");
+                                                                                          goto if_nickname_not_available;
                                                                                 		} else 
                                                                                 	    	if(register_user(nick_name,pass,"admin") == 1){
                                                                                                 finish = 1;
@@ -946,6 +948,8 @@ void* solve_request(void *argv){
                                                         	char nick_name[250];
                                                         	char pass[250];
 
+                                                            if_nickname_not_available_user:
+
                                                                 notifyUser(data,"Nickname:");
                                                                 strcpy(nick_name,readFromClient(data,msg));
                                                                 nick_name[strlen(nick_name)-1] = '\0';
@@ -955,7 +959,8 @@ void* solve_request(void *argv){
                                                                 pass[strlen(pass)-1] = '\0';
 
                                                                 if (checkIfRegistered(nick_name) == 0) {
-                                                                	notifyUser(data,"Nickname-ul nu este disponibil, va rugam incercati altul");
+                                                                	notifyUser(data,"Nickname-ul nu este disponibil, va rugam incercati alt nickname \n");
+                                                                  goto if_nickname_not_available;
                                                                 }
                                                                 else
 
@@ -963,7 +968,7 @@ void* solve_request(void *argv){
                                                                                 printf("successfully registered\n");
                                                                                 strcpy(data->nickname,nick_name);
                                                 								strcpy(data->pass,pass);
-                                                								goto after_register_login_point;
+                                                								goto if_nickname_not_available_user;
                                                                 }
                                                                 else printf("Eroare la logare\n");
                                                                 
@@ -1076,18 +1081,24 @@ void* solve_request(void *argv){
                                                                         char nume[250];
                                                                         strcpy(nume,readFromClient(data,msg));
 
+                                                                        nume[strlen(nume)-1] = '\0';
+                                                                        
+                                                                        if(checkIfSongExists(nume) == 0) {
+                                                                          notifyUser(data,"oops..melodia nu se afla in top :(\n");
+                                                                          break;
+                                                                        }
+                                                                      
                                                                         strcpy(msg,"Comentariu:");
                                                                         if(write(data->fd,msg,sizeof(msg)) < 0) perror("err while responding to client\n");
                                                                         
                                                                         char comment[5000];
                                                                         strcpy(comment,readFromClient(data,msg));
 
-                                                                        nume[strlen(nume)-1] = '\0';
                                                                         strcpy(comment,replacestr(comment,"\n","\\n"));
 
                                                                         if(add_comm(data->nickname,nume,comment))
                                                                                 notifyUser(data,"Va multumim pentru comentariu :)\n");
-                                                                        else notifyUser(data,"oops..ceva nu a functionat la adaugarea comentariului :(\n poate ca melodia introdusa nu se afla in top ;)\n");
+                                                                        else notifyUser(data,"oops..ceva nu a functionat la adaugarea comentariului :(\n");
                                                                         
                                                                 }
                                                                 break;
@@ -1163,8 +1174,26 @@ void* solve_request(void *argv){
                                                                 case 'm':{
                                                                         //########################## ADD_SONG ############################
                                                                        
+                                                                        int succes;
+
                                                                         if (!data->admin) notifyUser(data,"Nu poti executa comanda intrucat nu ai drept de admin ;)\n");
-                                                                        else addSong(data);
+                                                                        else succes = addSong(data);
+                                                                        
+
+                                                                          switch (succes){
+                                                                                case 1:
+                                                                                notifyUser(data,"Cantecul a fost adaugat cu succes :)\n");
+                                                                                break;
+
+                                                                                case 0:
+                                                                                notifyUser(data,"Crack..ceva a mers prost :(\n");
+                                                                                break;
+
+                                                                                case -1:
+                                                                                notifyUser(data,"Cantecul exista deja in baza de date :)\n");
+                                                                                break;
+                                                                          }
+
                                                                         
                                                                 }
                                                                 break;
